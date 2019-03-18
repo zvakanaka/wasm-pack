@@ -222,6 +222,21 @@ pub fn wasm_bindgen_build(
     }
 
     child::run(cmd, "wasm-bindgen").context("Running the wasm-bindgen CLI")?;
+
+    modify_generated_bindgen_js(out_dir, &data.crate_name())?;
+
+    Ok(())
+}
+
+fn modify_generated_bindgen_js(out_dir: &str, crate_name: &str) -> Result<(), failure::Error> {
+    let js = format!("{}.js", crate_name);
+    let bindgen_js_path = Path::new(out_dir).join(js);
+
+    let bindgen_js: String = fs::read_to_string(&bindgen_js_path)?.parse()?;
+    // i am sorry for this hack, plz forgive
+    let modded = bindgen_js.replace("module_or_path instanceof WebAssembly.Module", "true");
+
+    fs::write(&bindgen_js_path, modded.as_bytes())?;
     Ok(())
 }
 
